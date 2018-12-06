@@ -13,6 +13,8 @@ namespace Sitecore.Support.Pipelines.RenderLayout
 {
   public class SecurityCheck : Sitecore.Pipelines.RenderLayout.SecurityCheck
   {
+    #region Original code
+
     public override void Process(RenderLayoutArgs args)
     {
       Assert.ArgumentNotNull(args, "args");
@@ -35,7 +37,14 @@ namespace Sitecore.Support.Pipelines.RenderLayout
           UrlString str2 = new UrlString(loginPage);
           if (Settings.Authentication.SaveRawUrl)
           {
-            str2.Append("url", HttpUtility.UrlEncode(Context.RawUrl));
+            #endregion
+
+            #region Modified Code
+            //user returnUrl parameter to ensure loging page understand where to redirect
+            str2.Append("returnUrl", HttpUtility.UrlEncode(Context.RawUrl));
+            #endregion
+
+            #region Original Code
           }
 
           WebUtil.Redirect(str2.ToString(), false);
@@ -44,5 +53,7 @@ namespace Sitecore.Support.Pipelines.RenderLayout
 
       Profiler.EndOperation();
     }
+
+    #endregion
   }
 }

@@ -19,6 +19,7 @@ namespace Sitecore.Support.Pipelines.HttpRequest
 {
   public class ExecuteRequest : Sitecore.Pipelines.HttpRequest.ExecuteRequest
   {
+    #region Original Code
     private string GetNoAccessUrl(out bool loginPage)
     {
       SiteContext site = Context.Site;
@@ -60,7 +61,24 @@ namespace Sitecore.Support.Pipelines.HttpRequest
       List<string> list = new List<string>(collection);
       if (Settings.Authentication.SaveRawUrl)
       {
-        string[] strArray2 = new string[] {"url", HttpUtility.UrlEncode(Context.RawUrl)};
+        #endregion
+
+        #region Modified Code
+
+        string[] strArray2;
+        if (flag && loginPage)
+        {
+          strArray2 = new string[] {"returnUrl", HttpUtility.UrlEncode(Context.RawUrl)};
+        }
+        else
+        {
+          strArray2 = new string[] { "url", HttpUtility.UrlEncode(Context.RawUrl) };
+        }
+
+        #endregion
+
+        #region Original Code
+
         list.AddRange(strArray2);
       }
 
@@ -169,5 +187,7 @@ namespace Sitecore.Support.Pipelines.HttpRequest
         }
       }
     }
+
+    #endregion
   }
 }
