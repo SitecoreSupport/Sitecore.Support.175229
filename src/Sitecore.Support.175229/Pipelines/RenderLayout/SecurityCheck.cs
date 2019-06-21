@@ -1,59 +1,51 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using Sitecore.Configuration;
-using Sitecore.Diagnostics;
-using Sitecore.Pipelines.RenderLayout;
-using Sitecore.Sites;
-using Sitecore.Text;
-using Sitecore.Web;
-
-namespace Sitecore.Support.Pipelines.RenderLayout
+﻿namespace Sitecore.Support.Pipelines.RenderLayout
 {
+  using Sitecore.Configuration;
+  using Sitecore.Diagnostics;
+  using Sitecore.Pipelines.RenderLayout;
+  using Sitecore.Sites;
+  using Sitecore.Text;
+  using Sitecore.Web;
+
   public class SecurityCheck : Sitecore.Pipelines.RenderLayout.SecurityCheck
   {
-    #region Original code
-
-    public override void Process(RenderLayoutArgs args)
+    public override void Process([NotNull] RenderLayoutArgs args)
     {
       Assert.ArgumentNotNull(args, "args");
+
       Profiler.StartOperation("Check security access to page.");
-      if (!this.HasAccess())
+
+      if (!HasAccess())
       {
         args.AbortPipeline();
+
         SiteContext site = Context.Site;
-        string loginPage = this.GetLoginPage(site);
-        if (loginPage.Length <= 0)
+
+        string loginPage = GetLoginPage(site);
+
+        if (loginPage.Length > 0)
         {
-          Tracer.Info("Redirecting to error page as no login page was found.");
-          WebUtil.RedirectToErrorPage(
-            "Login is required, but no valid login page has been specified for the site (" + Context.Site.Name + ").",
-            false);
+          Tracer.Info("Redirecting to login page \"" + loginPage + "\".");
+          UrlString url = new UrlString(loginPage);
+          if (Settings.Authentication.SaveRawUrl)
+          {
+            #region Changed code
+            //use returnUrl parameter to ensure login page understand where to redirect
+            url.Append("returnUrl", Context.RawUrl); // removed HttpUtility.UrlEncode to avoid double encoding
+            #endregion
+          }
+
+          WebUtil.Redirect(url.ToString(), false);
         }
         else
         {
-          Tracer.Info("Redirecting to login page \"" + loginPage + "\".");
-          UrlString str2 = new UrlString(loginPage);
-          if (Settings.Authentication.SaveRawUrl)
-          {
-            #endregion
+          Tracer.Info("Redirecting to error page as no login page was found.");
 
-            #region Modified Code
-            //user returnUrl parameter to ensure loging page understand where to redirect
-            str2.Append("returnUrl", HttpUtility.UrlEncode(Context.RawUrl));
-            #endregion
-
-            #region Original Code
-          }
-
-          WebUtil.Redirect(str2.ToString(), false);
+          WebUtil.RedirectToErrorPage("Login is required, but no valid login page has been specified for the site (" + Context.Site.Name + ").", false);
         }
       }
 
       Profiler.EndOperation();
     }
-
-    #endregion
   }
 }
